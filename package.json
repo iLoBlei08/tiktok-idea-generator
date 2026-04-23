@@ -1,0 +1,24 @@
+{
+  "name": "tiktok-idea-generator",
+  "version": "1.0.0",
+  "description": "An AI-powered web app that generates creative TikTok video ideas using Google's Gemini AI. Built with React (frontend) and Node.js/Express (backend).",
+  "main": "index.js",
+"scripts": {
+  "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iLoBlei08/tiktok-idea-generator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/iLoBlei08/tiktok-idea-generator/issues"
+  },
+  "homepage": "https://github.com/iLoBlei08/tiktok-idea-generator#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

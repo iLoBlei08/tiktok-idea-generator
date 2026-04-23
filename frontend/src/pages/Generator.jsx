@@ -33,7 +33,7 @@ function Generator() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6 pb-24">
       <div className="w-full max-w-md space-y-6">
         <h1 className="text-3xl font-bold text-center">TikTok Idea Generator</h1>
 
