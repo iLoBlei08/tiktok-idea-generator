@@ -34,7 +34,7 @@ function IdeaCard({ idea, onUnsave }) {
   }
 
   return (
-    <div className="relative bg-gray-800 rounded-xl p-6 space-y-4">
+    <div className="relative bg-gray-800 rounded-xl p-6 space-y-4 border border-gray-700">
 
       <div className="relative flex items-start justify-between">
         <h2 className="text-xl font-bold text-purple-400">{idea.title}</h2>
@@ -51,6 +51,11 @@ function IdeaCard({ idea, onUnsave }) {
             {saved ? '★' : '☆'}
           </button>
         </div>
+      </div>
+
+      <div>
+        <span className="text-xs text-gray-400 uppercase tracking-wide">Hook</span>
+        <p className="mt-1 text-gray-300">{idea.hook}</p>
       </div>
 
       <div>

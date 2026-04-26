@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 function Generator() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const [form, setForm] = useState({
     niche: '',
     tone: '',
@@ -24,6 +25,16 @@ function Generator() {
         body: JSON.stringify(form)
       })
       const data = await response.json()
+
+      const session = {
+        id: Date.now(),
+        date: new Date().toISOString(),
+        params: { ...form },
+        ideas: data.ideas
+      }
+      const history = JSON.parse(localStorage.getItem('history') || '[]')
+      localStorage.setItem('history', JSON.stringify([session, ...history]))
+
       navigate('/results', { state: { ideas: data.ideas } })
     } catch (error) {
       console.error('Error:', error)
@@ -33,9 +44,9 @@ function Generator() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6 pb-24">
+    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6 pt-20">
       <div className="w-full max-w-md space-y-6">
-        <h1 className="text-3xl font-bold text-center">TikTok Idea Generator</h1>
+        <h1 className="text-4xl font-bold text-center">TikTok Idea Generator</h1>
 
         <div className="space-y-4">
           <input
@@ -43,20 +54,20 @@ function Generator() {
             value={form.niche}
             onChange={handleChange}
             placeholder="Niche (e.g. fitness, finance, cooking)"
-            className="w-full bg-gray-800 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-xl outline-none focus:ring-2 focus:ring-purple-500"
           />
           <input
             name="tone"
             value={form.tone}
             onChange={handleChange}
             placeholder="Tone (e.g. motivational, funny, educational)"
-            className="w-full bg-gray-800 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-xl outline-none focus:ring-2 focus:ring-purple-500"
           />
           <select
             name="duration"
             value={form.duration}
             onChange={handleChange}
-            className="w-full bg-gray-800 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-xl outline-none focus:ring-2 focus:ring-purple-500"
           >
             <option value="15">15 seconds</option>
             <option value="30">30 seconds</option>
@@ -67,7 +78,7 @@ function Generator() {
             name="quantity"
             value={form.quantity}
             onChange={handleChange}
-            className="w-full bg-gray-800 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-xl outline-none focus:ring-2 focus:ring-purple-500"
           >
             <option value={3}>3 ideas</option>
             <option value={5}>5 ideas</option>
@@ -78,11 +89,82 @@ function Generator() {
         <button
           onClick={handleSubmit}
           disabled={loading || !form.niche || !form.tone}
-          className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg px-4 py-3 font-semibold transition-colors"
+          className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg px-4 py-4 text-base font-semibold transition-colors"
         >
           {loading ? 'Generating...' : 'Generate Ideas'}
         </button>
       </div>
+
+      {/* Botón de ayuda flotante */}
+      <button
+        onClick={() => setShowHelp(true)}
+        className="fixed bottom-8 right-8 bg-purple-600 hover:bg-purple-700 text-white rounded-xl w-12 h-12 text-xl font-semibold shadow-lg transition-colors z-40"
+      >
+        ?
+      </button>
+
+      {/* Modal de ayuda */}
+      {showHelp && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6 animate-fade-in"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowHelp(false) }}
+        >
+          <div className="bg-gray-900 rounded-2xl max-w-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto animate-slide-up">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold">How it works</h2>
+              <button
+                onClick={() => setShowHelp(false)}
+                className="text-gray-400 hover:text-white text-2xl transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Explicación de campos */}
+            <div className="space-y-4">
+              <div>
+                <p className="font-semibold text-purple-400">Niche</p>
+                <p className="text-gray-300 text-sm mt-1">The topic of your content. Be specific — "personal finance for millennials" works better than just "finance".</p>
+              </div>
+              <div>
+                <p className="font-semibold text-purple-400">Tone</p>
+                <p className="text-gray-300 text-sm mt-1">How you want to sound. This shapes the hook and structure of each idea. Try "motivational", "funny", "educational" or "controversial".</p>
+              </div>
+              <div>
+                <p className="font-semibold text-purple-400">Duration</p>
+                <p className="text-gray-300 text-sm mt-1">The length of your video. Shorter videos get tighter hooks and simpler structures. Longer ones allow more depth.</p>
+              </div>
+              <div>
+                <p className="font-semibold text-purple-400">Quantity</p>
+                <p className="text-gray-300 text-sm mt-1">How many ideas to generate. Start with 3 to test the output, then scale up once you find a niche and tone that works.</p>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-gray-700" />
+
+            {/* Card de ejemplo */}
+            <div>
+              <p className="font-semibold text-gray-300 mb-3">Example output</p>
+              <div className="bg-gray-800 rounded-xl p-5 space-y-4">
+                <h3 className="text-lg font-bold text-purple-400">The 1% Rule for Saving Money</h3>
+                <div>
+                  <span className="text-xs text-gray-400 uppercase tracking-wide">Hook</span>
+                  <p className="mt-1 text-gray-300 text-sm">You don't need to save 20% of your income. Start with 1% and here's why it works.</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 uppercase tracking-wide">Structure</span>
+                  <p className="mt-1 text-gray-300 text-sm">Open with the counterintuitive claim, explain the psychology behind small habits, show a real example with numbers, close with a challenge.</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 uppercase tracking-wide">Call to action</span>
+                  <p className="mt-1 text-gray-300 text-sm">Save this video and try the 1% rule this week. Comment your starting number below.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
