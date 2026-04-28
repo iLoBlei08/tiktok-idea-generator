@@ -23,7 +23,9 @@ router.post('/generate', async (req, res) => {
 
     const text = completion.choices[0].message.content
     const clean = text.replace(/```json|```/g, '').trim()
-    const ideas = JSON.parse(clean)
+    const parsed = JSON.parse(clean)
+
+    res.json({ ideas: parsed.ideas, sessionName: parsed.sessionName })
 
     res.json({ ideas })
   } catch (error) {

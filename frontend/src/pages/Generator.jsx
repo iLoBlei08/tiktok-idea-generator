@@ -1,16 +1,22 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 function Generator() {
   const navigate = useNavigate()
+  const location = useLocation()
+
   const [loading, setLoading] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showReplaceModal, setShowReplaceModal] = useState(false)
+  const [pendingSession, setPendingSession] = useState(null)
   const [form, setForm] = useState({
-    niche: '',
-    tone: '',
-    duration: '60',
-    quantity: 3
+    niche: location.state?.params?.niche || '',
+    tone: location.state?.params?.tone || '',
+    duration: location.state?.params?.duration || '60',
+    quantity: location.state?.params?.quantity || 3
   })
+
+  const editId = location.state?.editId || null
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -30,17 +36,46 @@ function Generator() {
         id: Date.now(),
         date: new Date().toISOString(),
         params: { ...form },
-        ideas: data.ideas
+        ideas: data.ideas,
+        sessionName: data.sessionName || form.niche
       }
-      const history = JSON.parse(localStorage.getItem('history') || '[]')
-      localStorage.setItem('history', JSON.stringify([session, ...history]))
 
-      navigate('/results', { state: { ideas: data.ideas } })
+      if (editId) {
+        setPendingSession(session)
+        setShowReplaceModal(true)
+      } else {
+        saveAsNew(session)
+        navigate('/results', { state: { ideas: data.ideas } })
+      }
     } catch (error) {
       console.error('Error:', error)
     } finally {
       setLoading(false)
     }
+  }
+
+  function saveAsNew(session) {
+    const history = JSON.parse(localStorage.getItem('history') || '[]')
+    localStorage.setItem('history', JSON.stringify([session, ...history]))
+  }
+
+  function handleReplace() {
+    const history = JSON.parse(localStorage.getItem('history') || '[]')
+    const index = history.findIndex(s => s.id === editId)
+    if (index !== -1) {
+      history[index] = pendingSession
+    } else {
+      history.unshift(pendingSession)
+    }
+    localStorage.setItem('history', JSON.stringify(history))
+    setShowReplaceModal(false)
+    navigate('/results', { state: { ideas: pendingSession.ideas } })
+  }
+
+  function handleSaveAsNew() {
+    saveAsNew(pendingSession)
+    setShowReplaceModal(false)
+    navigate('/results', { state: { ideas: pendingSession.ideas } })
   }
 
   return (
@@ -54,20 +89,20 @@ function Generator() {
             value={form.niche}
             onChange={handleChange}
             placeholder="Niche (e.g. fitness, finance, cooking)"
-            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-xl outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-lg outline-none focus:ring-2 focus:ring-purple-500"
           />
           <input
             name="tone"
             value={form.tone}
             onChange={handleChange}
             placeholder="Tone (e.g. motivational, funny, educational)"
-            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-xl outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-lg outline-none focus:ring-2 focus:ring-purple-500"
           />
           <select
             name="duration"
             value={form.duration}
             onChange={handleChange}
-            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-xl outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-lg outline-none focus:ring-2 focus:ring-purple-500"
           >
             <option value="15">15 seconds</option>
             <option value="30">30 seconds</option>
@@ -78,7 +113,7 @@ function Generator() {
             name="quantity"
             value={form.quantity}
             onChange={handleChange}
-            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-xl outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full bg-gray-800 rounded-lg px-4 py-4 text-lg outline-none focus:ring-2 focus:ring-purple-500"
           >
             <option value={3}>3 ideas</option>
             <option value={5}>5 ideas</option>
@@ -98,10 +133,37 @@ function Generator() {
       {/* Botón de ayuda flotante */}
       <button
         onClick={() => setShowHelp(true)}
-        className="fixed bottom-8 right-8 bg-purple-600 hover:bg-purple-700 text-white rounded-xl w-12 h-12 text-xl font-semibold shadow-lg transition-colors z-40"
+        className="fixed bottom-8 right-8 bg-purple-600 hover:bg-purple-700 text-white rounded-xl w-12 h-12 text-xl font-bold shadow-lg transition-colors z-40"
       >
         ?
       </button>
+
+      {/* Modal reemplazar o nueva sesión */}
+      {showReplaceModal && (
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6 animate-fade-in"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowReplaceModal(false) }}
+        >
+          <div className="bg-gray-900 rounded-2xl p-6 space-y-4 max-w-sm w-full animate-slide-up">
+            <h2 className="text-lg font-bold">What do you want to do?</h2>
+            <p className="text-gray-400 text-sm">You edited an existing session. Do you want to replace it or save as a new one?</p>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={handleSaveAsNew}
+                className="flex-1 bg-gray-800 hover:bg-gray-700 text-white rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
+              >
+                Save as new
+              </button>
+              <button
+                onClick={handleReplace}
+                className="flex-1 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
+              >
+                Replace
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de ayuda */}
       {showHelp && (
@@ -120,7 +182,6 @@ function Generator() {
               </button>
             </div>
 
-            {/* Explicación de campos */}
             <div className="space-y-4">
               <div>
                 <p className="font-semibold text-purple-400">Niche</p>
@@ -140,10 +201,8 @@ function Generator() {
               </div>
             </div>
 
-            {/* Divider */}
             <div className="border-t border-gray-700" />
 
-            {/* Card de ejemplo */}
             <div>
               <p className="font-semibold text-gray-300 mb-3">Example output</p>
               <div className="bg-gray-800 rounded-xl p-5 space-y-4">
