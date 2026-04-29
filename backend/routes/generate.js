@@ -27,7 +27,6 @@ router.post('/generate', async (req, res) => {
 
     res.json({ ideas: parsed.ideas, sessionName: parsed.sessionName })
 
-    res.json({ ideas })
   } catch (error) {
     console.error('Groq error:', error)
     res.status(500).json({ error: 'Failed to generate ideas' })
